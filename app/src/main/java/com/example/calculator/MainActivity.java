@@ -35,10 +35,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        screen = (TextView)findViewById(R.id.input_box);
-        screen.setText(display);
-        inputText = findViewById(R.id.input_box);
-        displayText = findViewById(R.id.result_box);
+        this.screen = (TextView)findViewById(R.id.input_box);
+        this.screen.setText(display);
+        this.inputText = findViewById(R.id.input_box);
+        this.displayText = findViewById(R.id.result_box);
     }
 
     private void appendToLast(String str) {
@@ -47,32 +47,27 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClickNumber(View v) {
         Button b = (Button) v;
-        display += b.getText();
-        appendToLast(display);
-        display="";
+        this.display += b.getText();
+        this.appendToLast(display);
+        this.display="";
     }
 
     public void onClickOperator(View v) {
         Button b = (Button) v;
-        display += b.getText();
-        if(endsWithOperator())
-        {
-            replace(display);
-            currentOperator = b.getText().toString();
-            display = "";
-        }
-        else {
+        this.display += b.getText();
+        if (endsWithOperator()) {
+            this.replace(display);
+        } else {
             appendToLast(display);
-            currentOperator = b.getText().toString();
-
-            display = "";
         }
+        this.currentOperator = b.getText().toString();
+        this.display = "";
 
     }
 
     public void onClearButton(View v) {
-        inputText.getText().clear();
-        displayText.setText("");
+        this.inputText.getText().clear();
+        this.displayText.setText("");
     }
 
     public void deleteNumber() {
@@ -102,23 +97,35 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    private void replace(String str) {
-        inputText.getText().replace(getInput().length() - 1, getInput().length(), str);
+    // continious dots, starts with dot, ends with dot, dot  -> return true
+    private boolean checkDotCases(String inp) {
+        if (inp.contains("..")) {
+            return true;
+        }
+        if (inp.startsWith(".")) {
+            return true;
+        }
+        if (inp.endsWith(".")) {
+            return true;
+        }
+        if (inp.contains(".+") || inp.contains("+.") || inp.contains(".-") || inp.contains("-.")
+                || inp.contains("x.") || inp.contains(".x") || inp.contains("./") || inp.contains("/.")) {
+            return true;
+        }
+        return false;
     }
 
-    private double operate(String a, String b, String cp) {
-        switch(cp) {
-            case "+": return Double.valueOf(a) + Double.valueOf(b);
-            case "-": return Double.valueOf(a) - Double.valueOf(b);
-            case "x": return Double.valueOf(a) * Double.valueOf(b);
-            case "\u00F7": return Double.valueOf(a) / Double.valueOf(b);
-            default: return -1;
-        }
+    private void replace(String str) {
+        inputText.getText().replace(getInput().length() - 1, getInput().length(), str);
     }
 
     public void equalResult(View v) {
         String input = getInput();
         if (hasAlphaBet(input) || startsWithOperator()) {
+            displayText.setText("ERROR");
+            return;
+        }
+        if (checkDotCases(input)) {
             displayText.setText("ERROR");
             return;
         }
@@ -133,11 +140,13 @@ public class MainActivity extends AppCompatActivity {
                 input = input.replaceAll("\u00F7", "/");
             }
 
-            Expression expression = new ExpressionBuilder(input).build();
             try {
+                Expression expression = new ExpressionBuilder(input).build();
                 double result = expression.evaluate();
                 displayText.setText(String.valueOf(result));
             } catch (ArithmeticException e) {
+                displayText.setText("ERROR");
+            } catch (Exception e1) {
                 displayText.setText("ERROR");
             }
 
